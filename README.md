@@ -1,6 +1,8 @@
 # bioengine-example
 
-Example upload script of bioengine
+Example upload script to upload a bioengine model. Note:
+[tutorial_model_runner.ipynb](tutorial_model_runner.ipynb) likely won't work,
+but gives an example of how this model might be used with tweaks.
 
 ## Setup
 
@@ -33,7 +35,7 @@ Example upload script of bioengine
 5. Run the upload script:
 
    ```bash
-   python upload_model.py cellpose-finetuning
+   python upload_model.py model_runner
    ```
 
 6. (Optional) Upload different model
