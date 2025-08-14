@@ -22,13 +22,21 @@ Example upload script of bioengine
    pip install -r requirements.txt
    ```
 
-4. Run the upload script:
+4. Copy the example environment file and set your API token:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   Replace <your_api_token_here> with your actual API token.
+
+5. Run the upload script:
 
    ```bash
    python upload_model.py cellpose-finetuning
    ```
 
-5. (Optional) Upload different model
+6. (Optional) Upload different model
 
    To upload a different model, use this command format:
 
