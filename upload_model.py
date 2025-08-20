@@ -67,7 +67,6 @@ async def upload_model(model_dir: str | None = None):
             await artifact_manager.edit(
                 artifact_id=f"ri-scale/{model_id}", manifest=model_manifest, stage=True
             )
-            return model_manifest
 
         await upload_directory(
             artifact_manager=artifact_manager,
@@ -75,7 +74,7 @@ async def upload_model(model_dir: str | None = None):
             artifact_id=model_id,
         )
 
-        await artifact_manager.commit(artifact_id=model_id)
+        # await artifact_manager.commit(artifact_id=model_id)
 
 
 def main():
