@@ -58,18 +58,6 @@ async def upload_model(model_name: str, directory: str | None = None):
             "public/artifact-manager"
         )
 
-        model_hub_manifest = {
-            "name": "AI Model Hub",
-            "description": "A collection of AI models",
-        }
-
-        await ensure_artifact_exists(
-            artifact_manager=artifact_manager,
-            alias="ai-model-hub",
-            type="collection",
-            manifest=model_hub_manifest,
-        )
-
         model_manifest = {
             "name": model_name,
             "description": f"AI model for {model_name}",
