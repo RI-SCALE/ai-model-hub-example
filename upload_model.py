@@ -6,7 +6,7 @@ import os
 import httpx
 import yaml
 from dotenv import load_dotenv
-from hypha_rpc import connect_to_server
+from hypha_rpc import connect_to_server, login
 from hypha_rpc.rpc import RemoteException, RemoteService
 
 logger = logging.getLogger(__name__)
@@ -36,9 +36,12 @@ async def upload_model(model_dir: str | None = None):
 
     load_dotenv()
 
+    server_url = os.getenv("HYPHA_SERVER_URL") or "https://hypha.aicell.io"
+    token = os.getenv("HYPHA_TOKEN") or await login({"server_url": server_url})
+
     server_config = {
-        "server_url": "https://hypha.aicell.io",
-        "token": os.getenv("HYPHA_API_TOKEN"),
+        "server_url": server_url,
+        "token": token,
     }
 
     async with connect_to_server(server_config) as server:
@@ -59,8 +62,8 @@ async def upload_model(model_dir: str | None = None):
                 stage=True,
                 manifest=model_manifest,
             )
-        except RemoteException as e:
-            print("Artifact already exists. Error: %s", e)
+        except RemoteException:
+            print("Artifact already exists.")
             await artifact_manager.edit(
                 artifact_id=f"ri-scale/{model_id}", manifest=model_manifest, stage=True
             )

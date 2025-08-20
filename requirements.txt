@@ -1,3 +1,4 @@
 hypha-rpc
 dotenv
 httpx
+PyYAML
