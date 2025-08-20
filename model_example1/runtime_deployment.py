@@ -231,14 +231,14 @@ if __name__ == "__main__":
         Path(__file__).resolve().parent.parent.parent
         / ".bioengine"
         / "apps"
-        / "model-runner"
+        / "model-example1"
     )
     deployment_workdir.mkdir(parents=True, exist_ok=True)
     os.environ["TMPDIR"] = str(deployment_workdir)
     os.environ["HOME"] = str(deployment_workdir)
     os.chdir(deployment_workdir)
 
-    model_runner = RuntimeDeployment.func_or_class()
+    model_example1 = RuntimeDeployment.func_or_class()
 
     # Test the deployment with a model that should pass all checks
     model_id = "ambitious-ant"
@@ -246,7 +246,7 @@ if __name__ == "__main__":
 
     # Run the model test (torch is already in requirements, should automatically be skipped)
     test_result = asyncio.run(
-        model_runner.test(str(rdf_path), additional_requirements=["torch==2.5.1"])
+        model_example1.test(str(rdf_path), additional_requirements=["torch==2.5.1"])
     )
     print("Model testing completed successfully")
 
@@ -260,5 +260,5 @@ if __name__ == "__main__":
     test_image = np.load(test_image_path).astype("float32")
 
     # Run the prediction
-    result = asyncio.run(model_runner.predict(str(rdf_path), inputs=test_image))
+    result = asyncio.run(model_example1.predict(str(rdf_path), inputs=test_image))
     print(f"Model prediction result: {result}")

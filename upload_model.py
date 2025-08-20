@@ -1,24 +1,15 @@
-import os
-import asyncio
 import argparse
-from typing import Any
-from venv import logger
+import asyncio
+import logging
+import os
+
 import httpx
-from hypha_rpc import connect_to_server
-from hypha_rpc.rpc import RemoteService, RemoteException
+import yaml
 from dotenv import load_dotenv
+from hypha_rpc import connect_to_server
+from hypha_rpc.rpc import RemoteException, RemoteService
 
-
-async def ensure_artifact_exists(
-    artifact_manager: RemoteService, **kwargs: Any
-) -> dict[str, Any]:
-    try:
-        return await artifact_manager.create(**kwargs)
-    except RemoteException:
-        artifact_id = kwargs.get("alias")
-        manifest = await artifact_manager.read(artifact_id=artifact_id)
-        logger.info("Artifact already exists")
-        return manifest
+logger = logging.getLogger(__name__)
 
 
 async def upload_directory(
@@ -41,15 +32,12 @@ async def upload_directory(
                 response.raise_for_status()
 
 
-async def upload_model(model_name: str, directory: str | None = None):
-    if directory is None:
-        directory = model_name
+async def upload_model(model_dir: str | None = None):
 
     load_dotenv()
 
     server_config = {
         "server_url": "https://hypha.aicell.io",
-        "workspace": "ri-scale",
         "token": os.getenv("HYPHA_API_TOKEN"),
     }
 
@@ -58,42 +46,41 @@ async def upload_model(model_name: str, directory: str | None = None):
             "public/artifact-manager"
         )
 
-        model_manifest = {
-            "name": model_name,
-            "description": f"AI model for {model_name}",
-        }
+        with open(os.path.join(model_dir, "manifest.yaml"), "r") as f:
+            model_manifest = yaml.safe_load(f)
 
-        await ensure_artifact_exists(
-            artifact_manager=artifact_manager,
-            parent_id="ai-model-hub",
-            alias=model_name,
-            type="model",
-            manifest=model_manifest,
-        )
+        model_id = model_manifest["id"]
 
-        await artifact_manager.edit(artifact_id=model_name, stage=True)
+        try:
+            await artifact_manager.create(
+                parent_id="ri-scale/ai-model-hub",
+                workspace="ri-scale",
+                alias=model_id,
+                stage=True,
+                manifest=model_manifest,
+            )
+        except RemoteException as e:
+            print("Artifact already exists. Error: %s", e)
+            await artifact_manager.edit(
+                artifact_id=f"ri-scale/{model_id}", manifest=model_manifest, stage=True
+            )
+            return model_manifest
 
         await upload_directory(
             artifact_manager=artifact_manager,
-            directory=directory,
-            artifact_id=model_name,
+            directory=model_dir,
+            artifact_id=model_id,
         )
 
-        await artifact_manager.commit(artifact_id=model_name)
+        await artifact_manager.commit(artifact_id=model_id)
 
 
 def main():
     parser = argparse.ArgumentParser(description="Upload model dataset to Hypha")
-    parser.add_argument("model_name", type=str, help="Name of the model to upload")
-    parser.add_argument(
-        "-d",
-        "--directory",
-        type=str,
-        help="Directory of the model dataset to upload",
-    )
+    parser.add_argument("model_dir", type=str, help="Directory of the model to upload")
     args = parser.parse_args()
 
-    asyncio.run(upload_model(args.model_name, args.directory))
+    asyncio.run(upload_model(args.model_dir))
 
 
 if __name__ == "__main__":

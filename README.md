@@ -1,21 +1,19 @@
-# bioengine-example
+# ai-model-hub-example
 
-Example upload script to upload a bioengine model. Note:
-[tutorial_model_runner.ipynb](tutorial_model_runner.ipynb) likely won't work,
-but gives an example of how this model might be used with tweaks.
+Example upload script to upload a bioengine model.
 
 ## Setup
 
 1. Clone the repository:
 
    ```bash
-   git clone git@github.com:aicell-lab/bioengine-example.git
+   git clone git@github.com:aicell-lab/ai-model-hub-example.git
    ```
 
 2. Navigate to the project directory:
 
    ```bash
-   cd bioengine-example
+   cd ai-model-hub-example
    ```
 
 3. Install the required dependencies:
@@ -35,7 +33,7 @@ but gives an example of how this model might be used with tweaks.
 5. Run the upload script:
 
    ```bash
-   python upload_model.py model_runner
+   python upload_model.py model_example1
    ```
 
 6. (Optional) Upload different model

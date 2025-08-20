@@ -132,7 +132,7 @@ class ModelCache:
         for dir_path in local_dirs:
             try:
                 await self._validate_package(dir_path)
-            except RuntimeError as e:
+            except RuntimeError:
                 await self._remove_package(dir_path)
 
         # Check for any stale temporary directories
@@ -1009,7 +1009,7 @@ class ModelCache:
     graceful_shutdown_timeout_s=300.0,
     graceful_shutdown_wait_loop_s=2.0,
 )
-class ModelRunner:
+class ModelExample1:
     """
     Ray Serve deployment for bioimage.io model operations.
 
@@ -1049,7 +1049,7 @@ class ModelRunner:
         )
 
         print(
-            f"🚀 [{self.replica_id}] ModelRunner initialized with models directory: "
+            f"🚀 [{self.replica_id}] ModelExample1 initialized with models directory: "
             f"{self.model_cache.cache_dir} (cache_size={self.model_cache.cache_size_bytes / (1024*1024*1024):.1f} GB)"
         )
 
@@ -1406,7 +1406,7 @@ if __name__ == "__main__":
             Path(__file__).resolve().parent.parent.parent
             / ".bioengine"
             / "apps"
-            / "model-runner"
+            / "model-example1"
         )
         deployment_workdir.mkdir(parents=True, exist_ok=True)
         os.environ["TMPDIR"] = str(deployment_workdir / "tmp")
@@ -1422,16 +1422,16 @@ if __name__ == "__main__":
         serve.get_replica_context = lambda: MockReplicaContext()
 
         try:
-            model_runner = ModelRunner.func_or_class(
+            model_example1 = ModelExample1.func_or_class(
                 runtime_deployment=MockHandle(),
                 cache_size_in_gb=0.23,  # 230 MB cache for testing
             )
 
-            await model_runner.test_deployment(model_id="ambitious-ant")
+            await model_example1.test_deployment(model_id="ambitious-ant")
 
             # Simulate newer remote files for testing updates
             file_metadata_path = (
-                model_runner.model_cache.cache_dir
+                model_example1.model_cache.cache_dir
                 / "ambitious-ant"
                 / ".file_metadata.json"
             )
@@ -1443,10 +1443,10 @@ if __name__ == "__main__":
                 json.dump(metadata, f, indent=2)
 
             # Run test again
-            await model_runner.test(model_id="ambitious-ant")  # ~18 MB
+            await model_example1.test(model_id="ambitious-ant")  # ~18 MB
 
             # This should exceed the cache size limit of 230 MB
-            await model_runner.test(model_id="charismatic-whale")  # ~225 MB
+            await model_example1.test(model_id="charismatic-whale")  # ~225 MB
         finally:
             # Restore original function
             serve.get_replica_context = original_get_replica_context
