@@ -85,7 +85,7 @@ async def upload_model(model_dir: str):
             artifact_id=full_artifact_id,
         )
 
-        # await artifact_manager.commit(artifact_id=full_artifact_id)
+        await artifact_manager.commit(artifact_id=full_artifact_id)
 
 
 def main():
