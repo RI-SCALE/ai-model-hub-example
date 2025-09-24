@@ -6,35 +6,10 @@ import os
 import httpx
 import yaml
 from dotenv import load_dotenv
-from hypha_rpc import connect_to_server, login  # type: ignore
-from hypha_rpc.rpc import RemoteException  # type: ignore
-from hypha_rpc.utils import ObjectProxy  # type: ignore
+from hypha_artifact import AsyncHyphaArtifact  # type: ignore
+from hypha_rpc import login  # type: ignore
 
 logger = logging.getLogger(__name__)
-
-
-async def upload_directory(
-    artifact_manager: ObjectProxy, directory: str, artifact_id: str
-):
-    for filename in os.listdir(directory):
-        file_path = os.path.join(directory, filename)
-        put_file_url = await artifact_manager.put_file(  # type: ignore
-            artifact_id=artifact_id,
-            file_path=filename,
-        )
-
-        if not isinstance(put_file_url, str):
-            raise ValueError("Expected put_file_url to be a string")
-
-        with open(file_path, "rb") as f:
-            content = f.read()
-            async with httpx.AsyncClient() as client:
-                response = await client.put(put_file_url, content=content)
-
-                if response.status_code != 200:
-                    logger.error("Failed to upload %s: %s", filename, response.text)
-
-                response.raise_for_status()
 
 
 async def upload_model(model_dir: str):
@@ -42,50 +17,47 @@ async def upload_model(model_dir: str):
     load_dotenv()
 
     server_url = os.getenv("HYPHA_SERVER_URL") or "https://hypha.aicell.io"
-    token: str = os.getenv("HYPHA_TOKEN") or await login({"server_url": server_url})  # type: ignore
+    token: str = os.getenv("HYPHA_API_TOKEN") or await login({"server_url": server_url})  # type: ignore
     workspace = "ri-scale"
 
-    server_config: dict[str, str] = {
-        "server_url": server_url,
-        "token": token,
-    }
+    if not isinstance(token, str):
+        raise ValueError("Token must be a string")
 
-    async with connect_to_server(server_config) as server:  # type: ignore
-        artifact_manager: ObjectProxy = await server.get_service(  # type: ignore
-            "public/artifact-manager"
-        )
+    with open(os.path.join(model_dir, "manifest.yaml"), "r") as f:
+        model_manifest = yaml.safe_load(f)
 
-        if not isinstance(artifact_manager, ObjectProxy):
-            raise ValueError("Expected artifact_manager to be a ObjectProxy")
+    model_id = model_manifest["id"]
 
-        with open(os.path.join(model_dir, "manifest.yaml"), "r") as f:
-            model_manifest = yaml.safe_load(f)
+    parent_artifact = AsyncHyphaArtifact(
+        artifact_id=f"{workspace}/ai-model-hub",
+        server_url=server_url,
+        token=token,
+        workspace=workspace,
+    )
 
-        model_id = model_manifest["id"]
-        full_parent_id = f"{workspace}/ai-model-hub"
-        full_artifact_id = f"{workspace}/{model_id}"
+    try:
+        await parent_artifact.create(model_manifest, stage=False)
+    except httpx.RequestError:
+        log_msg = f"Artifact {parent_artifact.artifact_id} likely already exists."
+        logger.info(log_msg)
 
-        try:
-            await artifact_manager.create(  # type: ignore
-                parent_id=full_parent_id,
-                workspace=workspace,
-                alias=model_id,
-                stage=True,
-                manifest=model_manifest,
-            )
-        except RemoteException:
-            print("Artifact already exists.")
-            await artifact_manager.edit(  # type: ignore
-                artifact_id=full_artifact_id, manifest=model_manifest, stage=True
-            )
+    hypha_artifact = AsyncHyphaArtifact(
+        artifact_id=f"{workspace}/{model_id}",
+        server_url=server_url,
+        token=token,
+        workspace=workspace,
+    )
 
-        await upload_directory(
-            artifact_manager=artifact_manager,
-            directory=model_dir,
-            artifact_id=full_artifact_id,
-        )
+    try:
+        await hypha_artifact.create(model_manifest, stage=True)
+    except httpx.RequestError:
+        log_msg = f"Artifact {hypha_artifact.artifact_id} likely already exists."
+        logger.info(log_msg)
+        await hypha_artifact.edit(model_manifest, stage=True)
 
-        await artifact_manager.commit(artifact_id=full_artifact_id)
+    await hypha_artifact.put(model_dir, recursive=True)
+
+    await hypha_artifact.commit()
 
 
 def main():

@@ -2,3 +2,4 @@ hypha-rpc
 dotenv
 httpx
 PyYAML
+hypha-artifact
