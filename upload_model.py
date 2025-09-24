@@ -46,6 +46,7 @@ async def upload_model(model_dir: str):
         server_url=server_url,
         token=token,
         workspace=workspace,
+        parent_id=f"{workspace}/ai-model-hub"
     )
 
     try:
