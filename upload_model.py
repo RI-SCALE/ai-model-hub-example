@@ -46,11 +46,12 @@ async def upload_model(model_dir: str):
         server_url=server_url,
         token=token,
         workspace=workspace,
-        parent_id=f"{workspace}/ai-model-hub"
     )
 
     try:
-        await hypha_artifact.create(model_manifest, stage=True)
+        await hypha_artifact.create(
+            model_manifest, parent_id=f"{workspace}/ai-model-hub", stage=True
+        )
     except httpx.RequestError:
         log_msg = f"Artifact {hypha_artifact.artifact_id} likely already exists."
         logger.info(log_msg)
