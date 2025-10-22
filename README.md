@@ -30,22 +30,20 @@ Example upload script to upload a bioengine model.
 
    Replace <your_api_token_here> with your actual API token.
 
-5. Run the upload script:
+5. Modify the `manifest.yaml` file in the desired model folder (e.g., `model_example1`) to set the correct `id` field:
+
+   ```yaml
+   id: your_model_id_here
+   ```
+
+6. Run the upload script:
 
    ```bash
    python upload_model.py model_example1
    ```
 
-6. (Optional) Upload different model
-
-   To upload a different model, use this command format:
+7. (Optional) Upload from a different folder:
 
    ```bash
-   python upload_model.py <model_name>
-   ```
-
-   Or if you want to specify a different model directory:
-
-   ```bash
-   python upload_model.py <model_name> <model_directory>
+   python upload_model.py <folder_name>
    ```

@@ -2,6 +2,7 @@ import argparse
 import asyncio
 import logging
 import os
+from typing import cast
 
 import httpx
 import yaml
@@ -39,10 +40,16 @@ async def upload_directory(
 
 async def upload_model(model_dir: str):
 
-    load_dotenv()
+    load_dotenv(override=True)
 
     server_url = os.getenv("HYPHA_SERVER_URL") or "https://hypha.aicell.io"
-    token: str = os.getenv("HYPHA_TOKEN") or await login({"server_url": server_url})  # type: ignore
+    token: str | None = os.getenv("HYPHA_TOKEN")
+
+    if not token:
+        login_result = await login({"server_url": server_url})  # type: ignore
+        token = cast(str, login_result)
+        logger.info("Logged in and obtained token.")
+
     workspace = "ri-scale"
 
     server_config: dict[str, str] = {
@@ -85,7 +92,11 @@ async def upload_model(model_dir: str):
             artifact_id=full_artifact_id,
         )
 
-        # await artifact_manager.commit(artifact_id=full_artifact_id)
+        logger.info(
+            "Successfully uploaded model '%s' to Hypha artifact '%s'",
+            model_id,
+            full_artifact_id,
+        )
 
 
 def main():
