@@ -28,7 +28,10 @@ Example upload script to upload a bioengine model.
    cp .env.example .env
    ```
 
-   Replace <your_api_token_here> with your actual API token.
+   Set `HYPHA_TOKEN` to your actual API token (replace `<your_api_token_here>`).
+   This is the variable name the upload script reads. Generate a token by logging
+   in at https://modelhub.riscale.eu and using the token controls on the Upload
+   page (`/#/upload`). For long-running or HPC jobs, pick a longer expiry.
 
 5. Modify the `manifest.yaml` file in the desired model folder (e.g., `model_example1`) to set the correct `id` field:
 
